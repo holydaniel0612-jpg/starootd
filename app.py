@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import json
 import datetime
+import base64 # 이미지를 base64로 인코딩하기 위한 라이브러리 추가
 
 # --- 1. 페이지 설정 & 디자인 ---
 st.set_page_config(page_title="StarOOTD", page_icon="🌟", layout="wide")
@@ -15,8 +16,12 @@ st.markdown("""
         color: #333;
     }
     
-    /* 상단바 컨테이너 (메뉴 - 로고 - 설정) */
-    .st-emotion-cache-z5rd5b { /* Streamlit 메인 헤더 컨테이너 ID (버전마다 다를 수 있음) */
+    /* Streamlit 기본 헤더/푸터 숨기기 (원하는 상단바를 직접 만들 거라서) */
+    header { visibility: hidden; }
+    footer { visibility: hidden; }
+
+    /* 커스텀 상단바 컨테이너 (메뉴 - 로고 - 설정) */
+    .custom-header {
         width: 100%;
         padding: 10px 20px;
         display: flex;
@@ -30,35 +35,21 @@ st.markdown("""
         margin-bottom: 20px; /* 상단바 아래 여백 */
     }
 
-    /* 로고 이미지 스타일 */
-    .header-logo {
-        display: flex;
-        justify-content: center; /* 로고 이미지 자체도 중앙 정렬 */
-        flex-grow: 1; /* 로고가 중앙에 오도록 공간 차지 */
-    }
-    .header-logo img {
+    /* 상단바 로고 이미지 스타일 */
+    .header-logo-img {
         max-width: 80px; /* 로고 크기 확실히 작게 조절 */
         height: auto;
         border-radius: 15px; /* 로고 둥근 모서리 */
-        box-shadow: none; /* 그림자 제거 */
+        display: block; /* 이미지 중앙 정렬을 위해 */
+        margin: 0 auto; /* 로고 이미지 자체 가운데 정렬 */
     }
 
-    /* 사이드바 토글 (메뉴 아이콘) 위치 조정 */
-    .st-emotion-cache-x43p6n { /* 사이드바 토글 버튼 ID (버전마다 다를 수 있음) */
-        position: absolute; /* 절대 위치로 상단바 안에 배치 */
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 1001; /* 로고보다 위 */
-    }
-
-    /* 설정 아이콘 (오른쪽 상단 Streamlit 기본 메뉴) */
-    .st-emotion-cache-163m4l { /* Streamlit 기본 메뉴 버튼 ID (버전마다 다를 수 있음) */
-        position: absolute; /* 절대 위치로 상단바 안에 배치 */
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 1001; /* 로고보다 위 */
+    /* 상단바 왼쪽/오른쪽 여백을 위한 더미 div */
+    .header-left-spacer, .header-right-spacer {
+        width: 80px; /* 로고와 같은 너비로 공간 확보 */
+        text-align: center;
+        font-size: 24px;
+        color: #555;
     }
 
     /* 검색창 컨테이너 */
@@ -76,15 +67,6 @@ st.markdown("""
         border-radius: 20px;
         font-size: 1rem;
         text-align: center; /* 검색창 플레이스홀더 텍스트 중앙 정렬 */
-    }
-
-    /* 메인 제목 숨기기 (로고만 쓸 때) */
-    h1 {
-        display: none; /* h1 제목은 사용하지 않으므로 숨김 */
-    }
-    /* 부제목도 숨기기 (로고만 쓸 때) */
-    .subtitle {
-        display: none; /* 부제목도 사용하지 않으므로 숨김 */
     }
 
     /* 이미지 카드 스타일 (기존 유지) */
@@ -164,14 +146,20 @@ with st.sidebar:
         else:
             st.warning("사진을 먼저 선택해주세요!")
 
-# [메인 화면] 로고와 검색 (상단바 스타일)
+# [메인 화면] 커스텀 상단바 (로고, 메뉴, 설정)
 logo_path = os.path.join(IMAGE_FOLDER, "logo_white.png")
+logo_base64 = ""
 
-# 상단바 중앙에 로고만 표시
+if os.path.exists(logo_path):
+    with open(logo_path, "rb") as f:
+        logo_base64 = base64.b64encode(f.read()).decode("utf-8")
+
 st.markdown(f"""
-    <div class="header-logo">
-        <img src="data:image/png;base64,{st.image(logo_path, use_column_width=False).image_data.decode('utf-8')}" alt="StarOOTD Logo">
-    </div>
+    <div class="custom-header">
+        <div class="header-left-spacer">☰</div> <div style="flex-grow: 1; text-align: center;">
+            <img src="data:image/png;base64,{logo_base64}" class="header-logo-img" alt="StarOOTD Logo">
+        </div>
+        <div class="header-right-spacer">⚙️</div> </div>
 """, unsafe_allow_html=True)
 
 # 검색창
