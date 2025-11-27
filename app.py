@@ -7,7 +7,7 @@ import base64
 # --- 1. 페이지 설정 & 디자인 ---
 st.set_page_config(page_title="StarOOTD", page_icon="🌟", layout="wide")
 
-# CSS: 디자인을 예쁘게 꾸며주는 코드 (최대한 Streamlit 기본 스타일 건드리지 않도록 최소화)
+# CSS: 디자인을 예쁘게 꾸며주는 코드 (상단바, 로고, 검색창 중심으로 재구성)
 st.markdown("""
     <style>
     /* 전체 배경색 */
@@ -16,23 +16,56 @@ st.markdown("""
         color: #333;
     }
     
-    /* Streamlit의 기본 헤더/푸터 숨기기 (깔끔하게 직접 배치하기 위해) */
+    /* Streamlit 기본 헤더/푸터 숨기기 (깔끔하게 직접 배치하기 위해) */
     header { visibility: hidden; }
     footer { visibility: hidden; }
 
-    /* 로고 이미지 컨테이너 (st.columns로 중앙 정렬) */
-    .logo-container {
+    /* Streamlit 사이드바 기본 스타일 조정 */
+    .st-emotion-cache-1ldb789 { /* 사이드바 컨테이너 ID (버전마다 다를 수 있음) */
+        background-color: #ffffff; /* 사이드바 배경색 흰색 */
+        box-shadow: 2px 0 10px rgba(0,0,0,0.05); /* 그림자 */
+    }
+    .st-emotion-cache-1kyxreqx { /* 사이드바 헤더 (New OOTD) */
+        color: #2c3e50;
+        font-size: 1.5em;
+        font-weight: bold;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 20px;
+    }
+
+    /* 메인 컨텐츠 상단 로고 및 검색바 컨테이너 */
+    .main-header-container {
         display: flex;
-        justify-content: center;
-        margin-bottom: 20px; /* 로고 아래 간격 */
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 0 40px 0; /* 상단 여백, 하단 여백 */
+        background-color: #ffffff; /* 로고/검색창 배경도 흰색으로 */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 30px; /* 메인 컨텐츠와 구분선 */
+        border-radius: 10px; /* 컨테이너 모서리 둥글게 */
+    }
+    .main-header-logo {
+        max-width: 100px; /* 로고 크기 조절 */
+        height: auto;
+        margin-bottom: 15px; /* 로고 아래 간격 */
+        border-radius: 15px; /* 로고 둥근 모서리 */
     }
 
     /* 검색창 스타일 */
     .stTextInput > div > div > input {
         text-align: center; /* 플레이스홀더 중앙 정렬 */
-        border-radius: 20px; /* 둥근 모서리 */
+        border-radius: 25px; /* 둥근 모서리 */
+        padding: 10px 15px;
+        width: 80%; /* 검색창 너비 조정 */
+        max-width: 400px;
+        border: 1px solid #ddd;
     }
-
+    .stTextInput > div > div > input:focus {
+        border-color: #3498db; /* 포커스 시 색상 */
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    }
+    
     /* 이미지 카드 스타일 (기존 유지) */
     div[data-testid="stImage"] img {
         border-radius: 15px;
@@ -57,6 +90,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# --- 세션 상태 초기화 (사이드바 열림/닫힘 상태 관리) ---
+if 'sidebar_state' not in st.session_state:
+    st.session_state['sidebar_state'] = 'expanded' # 기본으로 열린 상태
+
 # --- 2. 데이터 관리 (저장소) ---
 DATA_FILE = "ootd_data.json"
 IMAGE_FOLDER = "images"
@@ -75,6 +112,10 @@ def save_data(data):
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 # --- 3. 화면 구성 ---
+
+# 사이드바 열림/닫힘 버튼 (Streamlit의 기본 토글을 사용하도록 유도)
+# st.set_page_config의 initial_sidebar_state를 이용하거나,
+# st.sidebar.button 등으로 컨트롤 가능. 여기서는 Streamlit 기본 동작에 맡김.
 
 # [사이드바] 업로드 기능
 with st.sidebar:
@@ -110,28 +151,21 @@ with st.sidebar:
         else:
             st.warning("사진을 먼저 선택해주세요!")
 
-# [메인 화면] 로고, 검색바, 설정 아이콘 배치
+# [메인 화면] 상단 로고 및 검색바 (가운데 정렬)
 logo_path = os.path.join(IMAGE_FOLDER, "logo_white.png")
+logo_base64 = ""
 
-# 3개의 컬럼으로 상단바 구성: 메뉴 - 로고 - 설정
-col_menu, col_logo, col_settings = st.columns([1, 4, 1])
+if os.path.exists(logo_path):
+    with open(logo_path, "rb") as f:
+        logo_base64 = base64.b64encode(f.read()).decode("utf-8")
 
-with col_menu:
-    st.write(" ") # 빈 공간 (메뉴 아이콘 자리, Streamlit 사이드바 토글 버튼이 알아서 표시됨)
+st.markdown(f"""
+    <div class="main-header-container">
+        <img src="data:image/png;base64,{logo_base64}" class="main-header-logo" alt="StarOOTD Logo">
+        <input type="text" placeholder="태그나 메모 내용을 입력하세요" class="stTextInput_input" style="width: 80%; max-width: 400px; text-align: center;">
+    </div>
+""", unsafe_allow_html=True)
 
-with col_logo:
-    if os.path.exists(logo_path):
-        st.image(logo_path, width=80) # st.image의 width 파라미터로 직접 크기 조절
-    else:
-        st.write("## 🌟 Star OOTD") # 로고 없으면 텍스트 제목
-
-with col_settings:
-    st.write(" ") # 빈 공간 (설정 아이콘 자리, Streamlit 기본 메뉴가 알아서 표시됨)
-
-
-# 검색창 (로고 아래 중앙에 배치)
-st.text_input("🔍 검색어를 입력하세요", placeholder="태그나 메모 내용을 입력하세요", label_visibility="collapsed")
-# label_visibility="collapsed"로 기본 레이블 숨김
 
 st.markdown("---") # 구분선
 
@@ -141,7 +175,7 @@ data.reverse() # 최신순
 
 # 검색 필터
 # (검색창 연동은 나중에 기능 추가할 때 진행, 지금은 디자인만)
-search_query = "" # 현재 검색 기능은 비활성화 상태
+search_query = "" # 현재 검색 기능은 비활성화 상태 (상단 검색창은 HTML로 임시 배치)
 
 if search_query:
     filtered_data = [item for item in data if search_query in item['tags'] or search_query in item['caption']]
