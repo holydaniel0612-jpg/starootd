@@ -11,52 +11,93 @@ st.markdown("""
     <style>
     /* 전체 배경색 */
     .stApp {
-        background-color: #f8f9fa;
+        background-color: #f8f9fa; /* 연한 회색 배경 */
+        color: #333;
     }
     
-    /* 로고 이미지 가운데 정렬 및 크기 제한 */
-    div[data-testid="stImage"] {
+    /* 상단바 컨테이너 (메뉴 - 로고 - 설정) */
+    .st-emotion-cache-z5rd5b { /* Streamlit 메인 헤더 컨테이너 ID (버전마다 다를 수 있음) */
+        width: 100%;
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between; /* 양쪽 끝 정렬 */
+        align-items: center;
+        background-color: #ffffff; /* 흰색 상단바 배경 */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        margin-bottom: 20px; /* 상단바 아래 여백 */
+    }
+
+    /* 로고 이미지 스타일 */
+    .header-logo {
+        display: flex;
+        justify-content: center; /* 로고 이미지 자체도 중앙 정렬 */
+        flex-grow: 1; /* 로고가 중앙에 오도록 공간 차지 */
+    }
+    .header-logo img {
+        max-width: 80px; /* 로고 크기 확실히 작게 조절 */
+        height: auto;
+        border-radius: 15px; /* 로고 둥근 모서리 */
+        box-shadow: none; /* 그림자 제거 */
+    }
+
+    /* 사이드바 토글 (메뉴 아이콘) 위치 조정 */
+    .st-emotion-cache-x43p6n { /* 사이드바 토글 버튼 ID (버전마다 다를 수 있음) */
+        position: absolute; /* 절대 위치로 상단바 안에 배치 */
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1001; /* 로고보다 위 */
+    }
+
+    /* 설정 아이콘 (오른쪽 상단 Streamlit 기본 메뉴) */
+    .st-emotion-cache-163m4l { /* Streamlit 기본 메뉴 버튼 ID (버전마다 다를 수 있음) */
+        position: absolute; /* 절대 위치로 상단바 안에 배치 */
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1001; /* 로고보다 위 */
+    }
+
+    /* 검색창 컨테이너 */
+    .search-container {
         display: flex;
         justify-content: center;
-        margin-bottom: -20px; /* 로고와 제목 사이 간격 조절 */
+        width: 100%;
+        margin-bottom: 30px; /* 검색창 아래 여백 */
     }
-    div[data-testid="stImage"] img {
-        max-width: 100px; /* 로고 최대 크기 제한 (더 작게) */
-        height: auto;
-        border-radius: 15px; /* 로고도 둥글게 */
-        box-shadow: none; /* 로고에는 그림자 없애기 */
+    .search-container input {
+        width: 60%; /* 검색창 너비 */
+        max-width: 500px;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        font-size: 1rem;
+        text-align: center; /* 검색창 플레이스홀더 텍스트 중앙 정렬 */
     }
 
-    /* 제목(h1) 스타일 - 로고 아래 간격 조정 */
+    /* 메인 제목 숨기기 (로고만 쓸 때) */
     h1 {
-        text-align: center !important;
-        font-weight: 800 !important;
-        color: #333 !important;
-        padding-top: 10px !important;
-        margin-bottom: 0px !important;
-        font-size: 2.5em; /* 제목 글씨 크기 살짝 키움 */
+        display: none; /* h1 제목은 사용하지 않으므로 숨김 */
     }
-    
-    /* 부제목 스타일 */
+    /* 부제목도 숨기기 (로고만 쓸 때) */
     .subtitle {
-        text-align: center;
-        color: #666;
-        font-size: 1.2rem;
-        margin-bottom: 30px;
-        margin-top: 5px;
+        display: none; /* 부제목도 사용하지 않으므로 숨김 */
     }
 
-    /* 이미지 카드 스타일 (둥근 모서리 + 그림자) */
+    /* 이미지 카드 스타일 (기존 유지) */
     div[data-testid="stImage"] img {
         border-radius: 15px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         transition: transform 0.3s;
     }
     div[data-testid="stImage"] img:hover {
-        transform: scale(1.02); /* 마우스 올리면 커짐 */
+        transform: scale(1.02);
     }
     
-    /* 캡션과 태그 텍스트 */
+    /* 캡션과 태그 텍스트 (기존 유지) */
     .caption-style {
         font-size: 15px;
         color: #444;
@@ -123,22 +164,18 @@ with st.sidebar:
         else:
             st.warning("사진을 먼저 선택해주세요!")
 
-# [메인 화면] 로고와 제목, 검색
-# ⚠️ 여기가 바뀌었습니다! (흰색 로고를 쓰도록 경로 변경)
-logo_path = os.path.join(IMAGE_FOLDER, "logo_white.png") # 파일 이름 변경
+# [메인 화면] 로고와 검색 (상단바 스타일)
+logo_path = os.path.join(IMAGE_FOLDER, "logo_white.png")
 
-# 1. 로고 이미지 표시 (파일이 있을 때만)
-if os.path.exists(logo_path):
-    st.image(logo_path) # width는 CSS에서 조절
-
-# 2. 텍스트 제목 표시
-st.title("🌟 Star OOTD")
-st.markdown('<div class="subtitle">나만의 데일리 룩북 아카이브</div>', unsafe_allow_html=True)
+# 상단바 중앙에 로고만 표시
+st.markdown(f"""
+    <div class="header-logo">
+        <img src="data:image/png;base64,{st.image(logo_path, use_column_width=False).image_data.decode('utf-8')}" alt="StarOOTD Logo">
+    </div>
+""", unsafe_allow_html=True)
 
 # 검색창
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    search_query = st.text_input("🔍 검색", placeholder="태그나 메모 내용을 입력하세요")
+st.markdown('<div class="search-container"><input type="text" placeholder="검색어를 입력하세요" /></div>', unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -147,6 +184,9 @@ data = load_data()
 data.reverse() # 최신순
 
 # 검색 필터
+# (검색창 연동은 나중에 기능 추가할 때 진행, 지금은 디자인만)
+search_query = "" # 현재 검색 기능은 비활성화 상태
+
 if search_query:
     filtered_data = [item for item in data if search_query in item['tags'] or search_query in item['caption']]
 else:
