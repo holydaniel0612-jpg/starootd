@@ -2,12 +2,12 @@ import streamlit as st
 import os
 import json
 import datetime
-import base64 # 이미지를 base64로 인코딩하기 위한 라이브러리 추가
+import base64
 
 # --- 1. 페이지 설정 & 디자인 ---
 st.set_page_config(page_title="StarOOTD", page_icon="🌟", layout="wide")
 
-# CSS: 디자인을 예쁘게 꾸며주는 코드
+# CSS: 디자인을 예쁘게 꾸며주는 코드 (최대한 Streamlit 기본 스타일 건드리지 않도록 최소화)
 st.markdown("""
     <style>
     /* 전체 배경색 */
@@ -16,57 +16,21 @@ st.markdown("""
         color: #333;
     }
     
-    /* Streamlit 기본 헤더/푸터 숨기기 (원하는 상단바를 직접 만들 거라서) */
+    /* Streamlit의 기본 헤더/푸터 숨기기 (깔끔하게 직접 배치하기 위해) */
     header { visibility: hidden; }
     footer { visibility: hidden; }
 
-    /* 커스텀 상단바 컨테이너 (메뉴 - 로고 - 설정) */
-    .custom-header {
-        width: 100%;
-        padding: 10px 20px;
-        display: flex;
-        justify-content: space-between; /* 양쪽 끝 정렬 */
-        align-items: center;
-        background-color: #ffffff; /* 흰색 상단바 배경 */
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        margin-bottom: 20px; /* 상단바 아래 여백 */
-    }
-
-    /* 상단바 로고 이미지 스타일 */
-    .header-logo-img {
-        max-width: 80px; /* 로고 크기 확실히 작게 조절 */
-        height: auto;
-        border-radius: 15px; /* 로고 둥근 모서리 */
-        display: block; /* 이미지 중앙 정렬을 위해 */
-        margin: 0 auto; /* 로고 이미지 자체 가운데 정렬 */
-    }
-
-    /* 상단바 왼쪽/오른쪽 여백을 위한 더미 div */
-    .header-left-spacer, .header-right-spacer {
-        width: 80px; /* 로고와 같은 너비로 공간 확보 */
-        text-align: center;
-        font-size: 24px;
-        color: #555;
-    }
-
-    /* 검색창 컨테이너 */
-    .search-container {
+    /* 로고 이미지 컨테이너 (st.columns로 중앙 정렬) */
+    .logo-container {
         display: flex;
         justify-content: center;
-        width: 100%;
-        margin-bottom: 30px; /* 검색창 아래 여백 */
+        margin-bottom: 20px; /* 로고 아래 간격 */
     }
-    .search-container input {
-        width: 60%; /* 검색창 너비 */
-        max-width: 500px;
-        padding: 10px 15px;
-        border: 1px solid #ddd;
-        border-radius: 20px;
-        font-size: 1rem;
-        text-align: center; /* 검색창 플레이스홀더 텍스트 중앙 정렬 */
+
+    /* 검색창 스타일 */
+    .stTextInput > div > div > input {
+        text-align: center; /* 플레이스홀더 중앙 정렬 */
+        border-radius: 20px; /* 둥근 모서리 */
     }
 
     /* 이미지 카드 스타일 (기존 유지) */
@@ -146,26 +110,30 @@ with st.sidebar:
         else:
             st.warning("사진을 먼저 선택해주세요!")
 
-# [메인 화면] 커스텀 상단바 (로고, 메뉴, 설정)
+# [메인 화면] 로고, 검색바, 설정 아이콘 배치
 logo_path = os.path.join(IMAGE_FOLDER, "logo_white.png")
-logo_base64 = ""
 
-if os.path.exists(logo_path):
-    with open(logo_path, "rb") as f:
-        logo_base64 = base64.b64encode(f.read()).decode("utf-8")
+# 3개의 컬럼으로 상단바 구성: 메뉴 - 로고 - 설정
+col_menu, col_logo, col_settings = st.columns([1, 4, 1])
 
-st.markdown(f"""
-    <div class="custom-header">
-        <div class="header-left-spacer">☰</div> <div style="flex-grow: 1; text-align: center;">
-            <img src="data:image/png;base64,{logo_base64}" class="header-logo-img" alt="StarOOTD Logo">
-        </div>
-        <div class="header-right-spacer">⚙️</div> </div>
-""", unsafe_allow_html=True)
+with col_menu:
+    st.write(" ") # 빈 공간 (메뉴 아이콘 자리, Streamlit 사이드바 토글 버튼이 알아서 표시됨)
 
-# 검색창
-st.markdown('<div class="search-container"><input type="text" placeholder="검색어를 입력하세요" /></div>', unsafe_allow_html=True)
+with col_logo:
+    if os.path.exists(logo_path):
+        st.image(logo_path, width=80) # st.image의 width 파라미터로 직접 크기 조절
+    else:
+        st.write("## 🌟 Star OOTD") # 로고 없으면 텍스트 제목
 
-st.markdown("---")
+with col_settings:
+    st.write(" ") # 빈 공간 (설정 아이콘 자리, Streamlit 기본 메뉴가 알아서 표시됨)
+
+
+# 검색창 (로고 아래 중앙에 배치)
+st.text_input("🔍 검색어를 입력하세요", placeholder="태그나 메모 내용을 입력하세요", label_visibility="collapsed")
+# label_visibility="collapsed"로 기본 레이블 숨김
+
+st.markdown("---") # 구분선
 
 # [갤러리] 사진 보여주기
 data = load_data()
