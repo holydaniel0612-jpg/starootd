@@ -14,10 +14,17 @@ st.markdown("""
         background-color: #f8f9fa;
     }
     
-    /* 로고 이미지 가운데 정렬 */
+    /* 로고 이미지 가운데 정렬 및 크기 제한 */
     div[data-testid="stImage"] {
         display: flex;
         justify-content: center;
+        margin-bottom: -20px; /* 로고와 제목 사이 간격 조절 */
+    }
+    div[data-testid="stImage"] img {
+        max-width: 100px; /* 로고 최대 크기 제한 (더 작게) */
+        height: auto;
+        border-radius: 15px; /* 로고도 둥글게 */
+        box-shadow: none; /* 로고에는 그림자 없애기 */
     }
 
     /* 제목(h1) 스타일 - 로고 아래 간격 조정 */
@@ -25,8 +32,9 @@ st.markdown("""
         text-align: center !important;
         font-weight: 800 !important;
         color: #333 !important;
-        padding-top: 10px !important; /* 로고와의 간격 */
+        padding-top: 10px !important;
         margin-bottom: 0px !important;
+        font-size: 2.5em; /* 제목 글씨 크기 살짝 키움 */
     }
     
     /* 부제목 스타일 */
@@ -116,11 +124,12 @@ with st.sidebar:
             st.warning("사진을 먼저 선택해주세요!")
 
 # [메인 화면] 로고와 제목, 검색
-logo_path = os.path.join(IMAGE_FOLDER, "logo.png")
+# ⚠️ 여기가 바뀌었습니다! (흰색 로고를 쓰도록 경로 변경)
+logo_path = os.path.join(IMAGE_FOLDER, "logo_white.png") # 파일 이름 변경
 
 # 1. 로고 이미지 표시 (파일이 있을 때만)
 if os.path.exists(logo_path):
-    st.image(logo_path, width=200)
+    st.image(logo_path) # width는 CSS에서 조절
 
 # 2. 텍스트 제목 표시
 st.title("🌟 Star OOTD")
